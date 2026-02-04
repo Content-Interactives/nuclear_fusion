@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuclear Fusion in the Sun</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #0a0a1a;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .container {
+            width: 500px;
+            height: 500px;
+            position: relative;
+            overflow: hidden;
+            background: radial-gradient(ellipse at center, #1a1a3a 0%, #0a0a1a 100%);
+            border-radius: 8px;
+            box-shadow: 0 0 40px rgba(255, 150, 50, 0.2);
+        }
+
+        /* Stars background */
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 2s infinite ease-in-out;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        /* Sun styles */
+        .sun {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 180px;
+            height: 180px;
+            background: radial-gradient(circle at 30% 30%, #fff5d4, #ffcc00 30%, #ff8800 70%, #ff4400 100%);
+            border-radius: 50%;
+            box-shadow: 
+                0 0 60px #ff8800,
+                0 0 100px #ff6600,
+                0 0 140px #ff440088;
+            transition: all 1.5s ease-in-out;
+        }
+
+        .sun.zoomed {
+            width: 800px;
+            height: 800px;
+        }
+
+        .sun-surface {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, transparent 0%, rgba(255, 100, 0, 0.3) 100%);
+            animation: pulse 3s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
+        }
+
+        /* Text styles */
+        .text-overlay {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            color: white;
+            z-index: 100;
+            transition: opacity 0.8s ease-in-out;
+            pointer-events: none;
+        }
+
+        .top-text {
+            top: 20px;
+            padding: 0 20px;
+        }
+
+        .bottom-text {
+            bottom: 70px;
+            padding: 0 20px;
+        }
+
+        .question {
+            font-size: 20px;
+            font-weight: 600;
+            text-shadow: 0 0 20px rgba(255, 150, 50, 0.8);
+            line-height: 1.4;
+        }
+
+        .instruction {
+            font-size: 15px;
+            color: #aaccff;
+            text-shadow: 0 0 10px rgba(100, 150, 255, 0.5);
+        }
+
+        .caption {
+            font-size: 14px;
+            color: #ffddaa;
+            line-height: 1.5;
+            text-shadow: 0 0 10px rgba(255, 150, 50, 0.5);
+        }
+
+        /* Interior sun view */
+        .sun-interior {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #ff6600 0%, #ff4400 30%, #cc2200 60%, #881100 100%);
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+
+        .sun-interior.visible {
+            opacity: 1;
+        }
+
+        /* Plasma effect */
+        .plasma {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(ellipse at 30% 40%, rgba(255, 200, 100, 0.3) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 60%, rgba(255, 150, 50, 0.3) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(255, 100, 50, 0.2) 0%, transparent 40%);
+            animation: plasmaMove 4s infinite ease-in-out;
+        }
+
+        @keyframes plasmaMove {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(5deg); }
+        }
+
+        /* Hydrogen atoms */
+        .hydrogen {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            cursor: grab;
+            z-index: 50;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            user-select: none;
+        }
+
+        .hydrogen:active {
+            cursor: grabbing;
+        }
+
+        .hydrogen-core {
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 35% 35%, #88ddff, #4488cc 50%, #2266aa 100%);
+            border-radius: 50%;
+            box-shadow: 
+                0 0 15px #4488cc,
+                0 0 30px rgba(68, 136, 204, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .hydrogen-label {
+            position: absolute;
+            bottom: -20px;
+            width: 100%;
+            text-align: center;
+            font-size: 11px;
+            color: #88ddff;
+            font-weight: 600;
+            text-shadow: 0 0 5px #4488cc;
+            white-space: nowrap;
+        }
+
+        .hydrogen-symbol {
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        }
+
+        .hydrogen.in-zone {
+            transform: scale(0.8);
+        }
+
+        /* Electron orbit */
+        .electron-orbit {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: orbit 2s linear infinite;
+        }
+
+        .electron {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            top: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 10px white;
+        }
+
+        @keyframes orbit {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Fusion zone */
+        .fusion-zone {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            border: 3px dashed rgba(255, 255, 100, 0.6);
+            background: radial-gradient(circle, rgba(255, 200, 50, 0.2) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.5s ease, box-shadow 0.3s ease;
+            z-index: 40;
+        }
+
+        .fusion-zone.visible {
+            opacity: 1;
+            animation: zoneGlow 2s infinite ease-in-out;
+        }
+
+        .fusion-zone.ready {
+            border-color: rgba(255, 255, 150, 1);
+            box-shadow: 0 0 30px rgba(255, 200, 50, 0.8);
+        }
+
+        @keyframes zoneGlow {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 200, 50, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(255, 200, 50, 0.6); }
+        }
+
+        .fusion-zone-label {
+            position: absolute;
+            bottom: -25px;
+            width: 100%;
+            text-align: center;
+            font-size: 12px;
+            color: #ffdd88;
+            font-weight: 600;
+        }
+
+        /* Helium atom */
+        .helium {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 70px;
+            height: 70px;
+            z-index: 60;
+            opacity: 0;
+            transition: transform 0.8s ease-out, opacity 0.8s ease-out;
+        }
+
+        .helium.visible {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+
+        .helium-core {
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 35% 35%, #ffee88, #ffcc00 40%, #ff9900 80%, #ff6600 100%);
+            border-radius: 50%;
+            box-shadow: 
+                0 0 25px #ffaa00,
+                0 0 50px rgba(255, 170, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .helium-symbol {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        }
+
+        .helium-label {
+            position: absolute;
+            bottom: -22px;
+            width: 100%;
+            text-align: center;
+            font-size: 12px;
+            color: #ffcc00;
+            font-weight: 600;
+            text-shadow: 0 0 5px #ff9900;
+        }
+
+        .helium-orbit {
+            width: 130%;
+            height: 130%;
+            top: -15%;
+            left: -15%;
+            border-color: rgba(255, 220, 100, 0.4);
+        }
+
+        .helium-orbit .electron {
+            background: #ffee88;
+            box-shadow: 0 0 10px #ffcc00;
+        }
+
+        /* Energy flash */
+        .energy-flash {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle, white 0%, rgba(255, 255, 200, 0.8) 30%, transparent 70%);
+            border-radius: 50%;
+            opacity: 0;
+            z-index: 70;
+            pointer-events: none;
+        }
+
+        .energy-flash.active {
+            animation: flash 1.2s ease-out forwards;
+        }
+
+        @keyframes flash {
+            0% { width: 0; height: 0; opacity: 1; }
+            50% { width: 400px; height: 400px; opacity: 0.9; }
+            100% { width: 500px; height: 500px; opacity: 0; }
+        }
+
+        /* Emitted electrons */
+        .emitted-electrons {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 0;
+            height: 0;
+            z-index: 75;
+            pointer-events: none;
+        }
+
+        .emitted-electron {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: radial-gradient(circle at 30% 30%, #aaddff, #4488ff 50%, #2266cc 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 15px #4488ff, 0 0 25px rgba(68, 136, 255, 0.6);
+            opacity: 0;
+            left: -6px;
+            top: -6px;
+        }
+
+        .emitted-electron.fly {
+            animation: flyOut 1.2s ease-out forwards;
+        }
+
+        .emitted-electron:nth-child(1).fly { animation-name: flyOut1; }
+        .emitted-electron:nth-child(2).fly { animation-name: flyOut2; }
+        .emitted-electron:nth-child(3).fly { animation-name: flyOut3; }
+        .emitted-electron:nth-child(4).fly { animation-name: flyOut4; }
+
+        @keyframes flyOut1 {
+            0% { opacity: 1; transform: translate(0, 0) scale(1); }
+            100% { opacity: 0; transform: translate(-180px, -150px) scale(0.5); }
+        }
+
+        @keyframes flyOut2 {
+            0% { opacity: 1; transform: translate(0, 0) scale(1); }
+            100% { opacity: 0; transform: translate(180px, -140px) scale(0.5); }
+        }
+
+        @keyframes flyOut3 {
+            0% { opacity: 1; transform: translate(0, 0) scale(1); }
+            100% { opacity: 0; transform: translate(-170px, 160px) scale(0.5); }
+        }
+
+        @keyframes flyOut4 {
+            0% { opacity: 1; transform: translate(0, 0) scale(1); }
+            100% { opacity: 0; transform: translate(175px, 155px) scale(0.5); }
+        }
+
+        /* Energy rays */
+        .energy-rays {
+            position: absolute;
+            left: 50%;
+            top: 32%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1s ease;
+            pointer-events: none;
+        }
+
+        .energy-rays.visible {
+            opacity: 1;
+        }
+
+        .ray {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            margin-left: -2px;
+            width: 8px;
+            height: 80px;
+            background: linear-gradient(to top, rgba(255, 200, 50, 0.8), transparent);
+            transform-origin: bottom center;
+            animation: rayPulse 2s infinite ease-in-out;
+        }
+
+        @keyframes rayPulse {
+            0%, 100% { opacity: 0.6; height: 80px; }
+            50% { opacity: 1; height: 100px; }
+        }
+
+        /* Navigation button */
+        .nav-button {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 28px;
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, #ff8800 0%, #ff5500 100%);
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            z-index: 200;
+            box-shadow: 0 4px 15px rgba(255, 100, 0, 0.4);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .nav-button:hover {
+            transform: translateX(-50%) scale(1.05);
+            box-shadow: 0 6px 20px rgba(255, 100, 0, 0.6);
+        }
+
+        .nav-button:active {
+            transform: translateX(-50%) scale(0.98);
+        }
+
+        .nav-button.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Progress indicator */
+        .progress {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 100;
+        }
+
+        .progress-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transition: background 0.3s ease, transform 0.3s ease;
+        }
+
+        .progress-dot.active {
+            background: #ffaa00;
+            transform: scale(1.2);
+        }
+
+        .progress-dot.completed {
+            background: rgba(255, 170, 0, 0.6);
+        }
+
+        /* Stage visibility */
+        .stage {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease-in-out;
+        }
+
+        .stage.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Counter for atoms in zone */
+        .atom-counter {
+            position: absolute;
+            bottom: 55px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 13px;
+            color: #aaccff;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 100;
+        }
+
+        .atom-counter.visible {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Stars background -->
+        <div class="stars" id="stars"></div>
+
+        <!-- Progress indicator -->
+        <div class="progress">
+            <div class="progress-dot active" data-stage="1"></div>
+            <div class="progress-dot" data-stage="2"></div>
+            <div class="progress-dot" data-stage="3"></div>
+            <div class="progress-dot" data-stage="4"></div>
+            <div class="progress-dot" data-stage="5"></div>
+        </div>
+
+        <!-- Stage 1: Big Question -->
+        <div class="stage active" id="stage1">
+            <div class="sun" id="sun1">
+                <div class="sun-surface"></div>
+            </div>
+            <div class="text-overlay bottom-text">
+                <p class="question">How does the Sun burn<br>without oxygen?</p>
+            </div>
+        </div>
+
+        <!-- Stage 2: Zoom Into Sun -->
+        <div class="stage" id="stage2">
+            <div class="sun-interior" id="sunInterior">
+                <div class="plasma"></div>
+            </div>
+            <div class="text-overlay top-text">
+                <p class="caption">Deep inside the Sun,<br>conditions are extreme.</p>
+            </div>
+            <div class="text-overlay bottom-text">
+                <p class="caption" style="font-size: 13px;">Temperature: 15 million °C<br>Pressure: 250 billion atmospheres</p>
+            </div>
+        </div>
+
+        <!-- Stage 3 & 4: Hydrogen Atoms & Interaction -->
+        <div class="stage" id="stage3">
+            <div class="sun-interior visible" style="opacity: 0.7;">
+                <div class="plasma"></div>
+            </div>
+            <div class="fusion-zone" id="fusionZone">
+                <span class="fusion-zone-label">Fusion Zone</span>
+            </div>
+            <div class="hydrogen" id="h1" style="left: 80px; top: 120px;">
+                <div class="hydrogen-core">
+                    <div class="electron-orbit"></div>
+                    <span class="hydrogen-symbol">H</span>
+                </div>
+                <span class="hydrogen-label">Hydrogen</span>
+            </div>
+            <div class="hydrogen" id="h2" style="left: 370px; top: 100px;">
+                <div class="hydrogen-core">
+                    <div class="electron-orbit" style="animation-delay: -0.5s;"></div>
+                    <span class="hydrogen-symbol">H</span>
+                </div>
+                <span class="hydrogen-label">Hydrogen</span>
+            </div>
+            <div class="hydrogen" id="h3" style="left: 60px; top: 330px;">
+                <div class="hydrogen-core">
+                    <div class="electron-orbit" style="animation-delay: -1s;"></div>
+                    <span class="hydrogen-symbol">H</span>
+                </div>
+                <span class="hydrogen-label">Hydrogen</span>
+            </div>
+            <div class="hydrogen" id="h4" style="left: 390px; top: 350px;">
+                <div class="hydrogen-core">
+                    <div class="electron-orbit" style="animation-delay: -1.5s;"></div>
+                    <span class="hydrogen-symbol">H</span>
+                </div>
+                <span class="hydrogen-label">Hydrogen</span>
+            </div>
+            <div class="text-overlay top-text" id="stage3Text">
+                <p class="caption">Four hydrogens float in the Sun's core.</p>
+            </div>
+            <div class="text-overlay bottom-text" id="stage4Text" style="opacity: 0;">
+                <p class="instruction">Drag all four hydrogens<br>into the fusion zone.</p>
+            </div>
+            <div class="atom-counter" id="atomCounter">0 of 4 atoms in fusion zone</div>
+        </div>
+
+        <!-- Stage 4: Fusion Event -->
+        <div class="stage" id="stage4">
+            <div class="sun-interior visible" style="opacity: 0.7;">
+                <div class="plasma"></div>
+            </div>
+            <div class="energy-flash" id="energyFlash"></div>
+            <div class="emitted-electrons" id="emittedElectrons">
+                <div class="emitted-electron"></div>
+                <div class="emitted-electron"></div>
+                <div class="emitted-electron"></div>
+                <div class="emitted-electron"></div>
+            </div>
+            <div class="helium" id="helium">
+                <div class="helium-core">
+                    <span class="helium-symbol">He</span>
+                </div>
+                <span class="helium-label">Helium</span>
+            </div>
+            <div class="text-overlay top-text">
+                <p class="caption" style="color: #ffee88;">Nuclear Fusion!</p>
+            </div>
+            <div class="text-overlay bottom-text">
+                <p class="caption">When hydrogen fuses into helium,<br>some mass is converted into energy.</p>
+            </div>
+        </div>
+
+        <!-- Stage 5: Energy Leaving Sun -->
+        <div class="stage" id="stage5">
+            <div class="sun" id="sun5" style="width: 120px; height: 120px;">
+                <div class="sun-surface"></div>
+            </div>
+            <div class="energy-rays visible" id="energyRays"></div>
+            <div class="text-overlay top-text">
+                <p class="caption" style="font-size: 13px; color: white;">This energy spreads outward as light and heat,<br>giving us sunlight and helping keep Earth warm.</p>
+            </div>
+            <div class="text-overlay bottom-text">
+                <p class="instruction" style="font-size: 13px;">The Sun doesn't burn—it fuses!<br>No oxygen needed.</p>
+            </div>
+        </div>
+
+        <!-- Navigation button -->
+        <button class="nav-button" id="navButton">Continue</button>
+    </div>
+
+    <script>
+        // State management
+        let currentStage = 1;
+        let atomsInZone = 0;
+        const hydrogenAtoms = {};
+        let isDragging = false;
+        let draggedAtom = null;
+        let dragOffset = { x: 0, y: 0 };
+
+        // DOM elements
+        const container = document.querySelector('.container');
+        const navButton = document.getElementById('navButton');
+        const fusionZone = document.getElementById('fusionZone');
+        const atomCounter = document.getElementById('atomCounter');
+        const progressDots = document.querySelectorAll('.progress-dot');
+
+        // Initialize stars
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            for (let i = 0; i < 50; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = star.style.height = (Math.random() * 2 + 1) + 'px';
+                star.style.animationDelay = Math.random() * 2 + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+
+        // Initialize energy rays
+        function createEnergyRays() {
+            const raysContainer = document.getElementById('energyRays');
+            const rayCount = 16;
+            for (let i = 0; i < rayCount; i++) {
+                const ray = document.createElement('div');
+                ray.className = 'ray';
+                const angle = (360 / rayCount) * i;
+                ray.style.transform = `rotate(${angle}deg) translateY(-100px)`;
+                ray.style.animationDelay = (i * 0.1) + 's';
+                raysContainer.appendChild(ray);
+            }
+        }
+
+        // Update progress dots
+        function updateProgress() {
+            progressDots.forEach((dot, index) => {
+                const stageNum = index + 1;
+                dot.classList.remove('active', 'completed');
+                if (stageNum === currentStage) {
+                    dot.classList.add('active');
+                } else if (stageNum < currentStage) {
+                    dot.classList.add('completed');
+                }
+            });
+        }
+
+        // Stage transitions
+        function goToStage(stageNum) {
+            // Hide all stages
+            document.querySelectorAll('.stage').forEach(s => s.classList.remove('active'));
+            
+            // Show target stage
+            const targetStage = document.getElementById(`stage${stageNum}`);
+            if (targetStage) {
+                targetStage.classList.add('active');
+            }
+
+            currentStage = stageNum;
+            updateProgress();
+
+            // Stage-specific logic
+            switch(stageNum) {
+                case 1:
+                    navButton.textContent = 'Continue';
+                    navButton.classList.remove('hidden');
+                    break;
+                case 2:
+                    navButton.textContent = 'Go Deeper';
+                    navButton.classList.remove('hidden');
+                    // Animate sun interior appearing
+                    setTimeout(() => {
+                        document.getElementById('sunInterior').classList.add('visible');
+                    }, 300);
+                    break;
+                case 3:
+                    navButton.classList.add('hidden');
+                    // Show hydrogen atoms first
+                    setTimeout(() => {
+                        // Show fusion zone and instructions
+                        fusionZone.classList.add('visible');
+                        document.getElementById('stage4Text').style.opacity = '1';
+                        atomCounter.classList.add('visible');
+                        initDragAndDrop();
+                    }, 1500);
+                    break;
+                case 4:
+                    navButton.classList.add('hidden');
+                    // Trigger fusion animation
+                    triggerFusion();
+                    break;
+                case 5:
+                    navButton.textContent = 'Start Over';
+                    navButton.classList.remove('hidden');
+                    break;
+            }
+        }
+
+        // Initialize drag and drop for hydrogen atoms
+        function initDragAndDrop() {
+            const atoms = document.querySelectorAll('#stage3 .hydrogen');
+            atoms.forEach(atom => {
+                hydrogenAtoms[atom.id] = {
+                    element: atom,
+                    inZone: false,
+                    originalPos: {
+                        left: parseInt(atom.style.left),
+                        top: parseInt(atom.style.top)
+                    }
+                };
+
+                atom.addEventListener('mousedown', startDrag);
+                atom.addEventListener('touchstart', startDrag, { passive: false });
+            });
+
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('touchmove', drag, { passive: false });
+            document.addEventListener('mouseup', endDrag);
+            document.addEventListener('touchend', endDrag);
+        }
+
+        function startDrag(e) {
+            if (currentStage !== 3) return;
+            e.preventDefault();
+            
+            draggedAtom = e.currentTarget;
+            isDragging = true;
+
+            const rect = draggedAtom.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            dragOffset.x = clientX - rect.left;
+            dragOffset.y = clientY - rect.top;
+
+            draggedAtom.style.zIndex = '100';
+            draggedAtom.style.transition = 'none';
+        }
+
+        function drag(e) {
+            if (!isDragging || !draggedAtom) return;
+            e.preventDefault();
+
+            const containerRect = container.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            let newX = clientX - containerRect.left - dragOffset.x;
+            let newY = clientY - containerRect.top - dragOffset.y;
+
+            // Constrain to container
+            newX = Math.max(0, Math.min(newX, 450));
+            newY = Math.max(0, Math.min(newY, 450));
+
+            draggedAtom.style.left = newX + 'px';
+            draggedAtom.style.top = newY + 'px';
+        }
+
+        function endDrag(e) {
+            if (!isDragging || !draggedAtom) return;
+
+            isDragging = false;
+            draggedAtom.style.transition = 'transform 0.3s ease, box-shadow 0.3s ease';
+            draggedAtom.style.zIndex = '50';
+
+            // Check if in fusion zone
+            const atomRect = draggedAtom.getBoundingClientRect();
+            const zoneRect = fusionZone.getBoundingClientRect();
+            const atomCenter = {
+                x: atomRect.left + atomRect.width / 2,
+                y: atomRect.top + atomRect.height / 2
+            };
+            const zoneCenter = {
+                x: zoneRect.left + zoneRect.width / 2,
+                y: zoneRect.top + zoneRect.height / 2
+            };
+
+            const distance = Math.sqrt(
+                Math.pow(atomCenter.x - zoneCenter.x, 2) +
+                Math.pow(atomCenter.y - zoneCenter.y, 2)
+            );
+
+            const atomData = hydrogenAtoms[draggedAtom.id];
+            const wasInZone = atomData.inZone;
+
+            if (distance < 70) {
+                // Snap to zone
+                atomData.inZone = true;
+                draggedAtom.classList.add('in-zone');
+                
+                // Position atoms in a cluster around center
+                const zonePositions = [
+                    { left: 205, top: 195 },
+                    { left: 245, top: 195 },
+                    { left: 205, top: 235 },
+                    { left: 245, top: 235 }
+                ];
+                
+                const inZoneCount = Object.values(hydrogenAtoms).filter(a => a.inZone).length;
+                const pos = zonePositions[inZoneCount - 1];
+                draggedAtom.style.left = pos.left + 'px';
+                draggedAtom.style.top = pos.top + 'px';
+            } else {
+                atomData.inZone = false;
+                draggedAtom.classList.remove('in-zone');
+            }
+
+            // Update counter
+            atomsInZone = Object.values(hydrogenAtoms).filter(a => a.inZone).length;
+            atomCounter.textContent = `${atomsInZone} of 4 atoms in fusion zone`;
+
+            // Check if all atoms are in zone
+            if (atomsInZone === 4) {
+                fusionZone.classList.add('ready');
+                setTimeout(() => {
+                    goToStage(4);
+                }, 800);
+            }
+
+            draggedAtom = null;
+        }
+
+        // Fusion animation
+        function triggerFusion() {
+            const flash = document.getElementById('energyFlash');
+            const helium = document.getElementById('helium');
+            const electrons = document.querySelectorAll('.emitted-electron');
+
+            // Flash effect and emit electrons simultaneously
+            setTimeout(() => {
+                flash.classList.add('active');
+                electrons.forEach(e => e.classList.add('fly'));
+            }, 500);
+
+            // Show helium after electrons fly out
+            setTimeout(() => {
+                helium.classList.add('visible');
+            }, 1400);
+
+            // Continue button
+            setTimeout(() => {
+                navButton.textContent = 'See the Result';
+                navButton.classList.remove('hidden');
+            }, 2500);
+        }
+
+        // Reset the experience
+        function reset() {
+            currentStage = 1;
+            atomsInZone = 0;
+            
+            // Reset hydrogen atoms
+            Object.values(hydrogenAtoms).forEach(atom => {
+                atom.inZone = false;
+                atom.element.classList.remove('in-zone');
+                atom.element.style.left = atom.originalPos.left + 'px';
+                atom.element.style.top = atom.originalPos.top + 'px';
+            });
+
+            // Reset visual elements
+            document.getElementById('sunInterior').classList.remove('visible');
+            fusionZone.classList.remove('visible', 'ready');
+            document.getElementById('stage4Text').style.opacity = '0';
+            atomCounter.classList.remove('visible');
+            atomCounter.textContent = '0 of 4 atoms in fusion zone';
+            document.getElementById('energyFlash').classList.remove('active');
+            document.querySelectorAll('.emitted-electron').forEach(e => e.classList.remove('fly'));
+            document.getElementById('helium').classList.remove('visible');
+
+            goToStage(1);
+        }
+
+        // Navigation button handler
+        navButton.addEventListener('click', () => {
+            if (currentStage === 5) {
+                reset();
+            } else if (currentStage === 4) {
+                goToStage(5);
+            } else {
+                goToStage(currentStage + 1);
+            }
+        });
+
+        // Initialize
+        createStars();
+        createEnergyRays();
+        goToStage(1);
+    </script>
+</body>
+</html>
