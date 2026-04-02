@@ -1,71 +1,106 @@
-# Nuclear Fusion Interactive
+# Nuclear Fusion Interactive — Technical README
 
-This repository contains the code for the **Nuclear Fusion Interactive**, designed to help students explore and understand **nuclear fusion**—the process that powers the Sun—through guided, visual, and hands-on interaction.
+A **five-stage**, **500×500 px** guided experience about solar nuclear fusion: text-driven scenes, optional **Sun zoom** styling, **drag-and-drop** hydrogen atoms into a fusion zone, then **CSS-driven** fusion and energy visuals. The implementation is a **single static file**—no bundler or dependencies.
 
-Students move step-by-step through the fusion process, from hydrogen atoms colliding to the release of energy as light and heat, building intuition for how fusion occurs without oxygen.
+**Live build:** [https://content-interactives.github.io/nuclear_fusion/](https://content-interactives.github.io/nuclear_fusion/)
 
----
-
-## 🔗 Live Interactive
-
-Try it out here:  
-👉 https://content-interactives.github.io/nuclear_fusion/
+Curriculum, placement, and standards copy live in [Standards.md](Standards.md).
 
 ---
 
-## 🌐 Where This Interactive Is Being Used
+## Stack
 
-This interactive is currently featured (or planned to be featured) in the following locations:
-
-- <img width="20" height="20" alt="image" src="https://github.com/user-attachments/assets/5d12571f-8e12-4441-98ab-c0bc94069a96" /> **CK-12 Intent Response**  
-  - 👉 PRODUCTION: *[PENDING]*  
-  - 👉 MASTER: *[PENDING]*
-- 📘 **CK-12 FlexBooks**  
-  - 👉 *(Add specific lesson links once embedded)*
-
----
-
-## 📚 Standards & Subjects
-
-This interactive aligns with the following topics and standards:
-
-- **📂 Subject Area**: Middle School / High School Science (Physical Science / Physics)  
-- **☀️ Topic**: Nuclear Fusion — Energy Production in the Sun  
-- **🧪 Key Concepts**:  
-  - Nuclear fusion as the combination of light nuclei  
-  - Energy release as light and heat  
-  - Fusion vs. chemical reactions (no oxygen required)  
-  - Fusion as the source of the Sun’s energy
-
-### Suggested Standards Alignment
-
-- **NGSS**:  
-  - **MS-PS1-1** – Develop models to describe the atomic composition of matter.  
-  - **HS-PS1-8** – Develop models to illustrate nuclear processes, including fusion.  
-  - **HS-PS3-1** – Create a computational model to calculate the change in energy of one component in a system when energy flows in or out.
+| Layer | Technology |
+|--------|------------|
+| Delivery | One HTML document |
+| Markup / style | Semantic HTML + **inline `<style>`** (~550 lines) |
+| Logic | **Inline `<script>`** (~300 lines), vanilla DOM APIs |
+| Assets | None external; stars and rays generated in JS |
 
 ---
 
-## 🎯 Learning Objectives
+## File layout
 
-After interacting with this simulation, students will be able to:
-
-- Explain **how the Sun produces energy without oxygen**  
-- Describe **nuclear fusion** as the process of combining hydrogen nuclei into helium  
-- Identify **energy release** as light and heat during fusion  
-- Distinguish nuclear fusion from everyday chemical reactions  
-- Build an intuitive understanding of why extreme conditions are required for fusion
+```
+index.html    # Entire app: CSS, five stage roots, script (state, drag, transitions, reset)
+Standards.md  # Non-technical: CK-12, NGSS alignment, objectives (not required to run the app)
+```
 
 ---
 
-## 🛠️ Developer Notes
+## DOM structure
 
-- **Built with:** HTML, CSS, JavaScript  
-- **Deployed via:** GitHub Pages  
-- **Repository structure:**  
-  - `index.html` — main interactive entry point  
-  - Supporting scripts, styles, and assets located within the repository  
-- **Design focus:**  
-  - Center-focused interaction  
-  - Clear stage-by-stage progression  
-  - Visual emphasis on energy release and particle motion
+- **`.container`** — Fixed `500px × 500px`, centered on `body`, dark radial background.
+- **`#stars`** — Filled by `createStars()` with **50** absolutely positioned `.star` divs (random position, size, `animation-delay`).
+- **`.progress`** — Five `.progress-dot` elements; `data-stage` 1–5. Classes `active` / `completed` mirror `currentStage`.
+- **Stages** — `.stage` blocks `#stage1` … `#stage5`. Only one has `.stage.active` at a time (`opacity: 1`, `pointer-events: auto`).
+- **`#navButton`** — Bottom-centered; label and visibility change per stage (`hidden` when drag phase is active).
+
+### Stage map (logical flow)
+
+| `currentStage` | `#stageN` | Role |
+|----------------|-----------|------|
+| 1 | `stage1` | Sun + hook question |
+| 2 | `stage2` | Interior copy; `#sunInterior` gets `.visible` after timeout |
+| 3 | `stage3` | Plasma background, **four** `#h1`–`#h4` `.hydrogen` atoms, `#fusionZone`, counter, drag UX |
+| 4 | `stage4` | `#energyFlash`, `.emitted-electron` ×4, `#helium`; `triggerFusion()` sequencing |
+| 5 | `stage5` | Smaller `#sun5`, `#energyRays` (16 `.ray` divs from `createEnergyRays()`), closing copy |
+
+`goToStage(n)` toggles active stage, updates dots, and runs a **`switch`** for timeouts, button text, and `initDragAndDrop()` (stage 3 only).
+
+---
+
+## JavaScript behavior
+
+### Global state
+
+- `currentStage` (1–5)
+- `atomsInZone` (redundant with derived count but updated for display)
+- `hydrogenAtoms` — map of atom `id` → `{ element, inZone, originalPos }` after `initDragAndDrop()`
+- Drag: `isDragging`, `draggedAtom`, `dragOffset`
+
+### Pointer handling (stage 3)
+
+- **`initDragAndDrop`** — Registers `mousedown` / `touchstart` on each `.hydrogen` in `#stage3`; document-level `mousemove` / `touchmove` / `mouseup` / `touchend`.
+- **`drag`** — Positions atom with `left` / `top` in px, clamped to **0–450** (50 px margin vs 500 width to account for atom size).
+- **`endDrag`** — Compares atom center to **fusion zone** center in viewport space; if Euclidean distance **&lt; 70**, marks `inZone`, adds `.in-zone`, **snaps** to one of four fixed cluster positions (`zonePositions`). When **four** atoms are in zone, adds `.ready` to `#fusionZone`, then **`goToStage(4)`** after 800 ms.
+
+### Fusion sequence (`triggerFusion`)
+
+Delayed `setTimeout` chain: flash + electron `.fly` classes → helium `.visible` → reveal nav (“See the Result”). Durations align with CSS keyframes (`flash`, `flyOut1`–`4`).
+
+### Reset
+
+From stage 5 button: restores atom positions from `originalPos`, clears fusion-related classes, helium, flash, electrons, interior visibility, counter; **`goToStage(1)`**.
+
+---
+
+## CSS notes
+
+- Heavy use of **keyframes** (`twinkle`, `pulse`, `plasmaMove`, `orbit`, `zoneGlow`, `flash`, `flyOut*`, `rayPulse`) and **transitions** on opacity/transform.
+- **`.sun.zoomed`** exists in CSS but is **not** toggled in the shipped script (possible leftover or hook for future use).
+- Energy **rays** use shared `.ray` class with per-element `transform: rotate(...) translateY(-100px)` and staggered `animation-delay`.
+
+---
+
+## Running locally
+
+Open `index.html` in a browser or serve the folder with any static file server (avoids any `file://` quirks for fonts or future assets):
+
+```bash
+npx serve .
+```
+
+---
+
+## Deploying
+
+Static hosting only (e.g. GitHub Pages). Ensure the site **`base` URL** matches the repository name if you use relative links elsewhere; this app uses **no** root-relative asset paths beyond the single page.
+
+---
+
+## Maintenance / extension
+
+- To change **hit radius** or **snap grid**, edit the **`70`** threshold and **`zonePositions`** in the script together with `.fusion-zone` size in CSS.
+- New stages require a new `#stageN` block, a progress dot, and branches in **`goToStage`**, **`navButton` click**, and **`reset()`** if applicable.
+- Drag listeners are added once when entering stage 3; **re-entering** stage 3 after reset without a full reload is not a current path (reset goes to stage 1). If you add mid-flow replay of stage 3, guard against **duplicate listeners** or remove them on leave.
